@@ -1,4 +1,4 @@
-function clusterPlot(rawPoints, { gridSize = 8, svgSize = 500, rawOutput = false, sharpCompatible = false } = {}) {
+function clusterPlot(rawPoints, { gridSize = 8 } = {}) {
     const ITERATIONS_COUNT = 3, SCALE_FACTOR = 4;
 
     function unionRaw(rawPoints) {
@@ -73,28 +73,13 @@ function clusterPlot(rawPoints, { gridSize = 8, svgSize = 500, rawOutput = false
         return Object.values(clusters).map(union);
     }
 
-    function makeSvg(points) {
-        const circles = [], texts = [], fontSizes = [0, 2, 1.35, 0.9, 0.75, 0.6];
-        for (let { x, y, count } of points) {
-            const r = Math.sqrt(count / rawPoints.length) / gridSize;
-            circles.push(`<circle cx="${svgSize * (x * 0.8 + 0.1)}" cy="${svgSize * (y * 0.8 + 0.1)}" r="${svgSize * r * 0.8}" fill="white" />`);
-            if (count) {
-                const text = String(count), size = r * (fontSizes[text.length] || (3 / text.length));
-                texts.push(sharpCompatible ?
-                    `<text x="${svgSize * (x * 0.8 + 0.1)}" y="${svgSize * (y * 0.8 + 0.1 + 0.2 * size)}" font-size="${svgSize * 0.8 * size}" dominant-baseline="center" text-anchor="middle" font-family="monospace" fill="black">${text}</text>` :
-                    `<text x="${svgSize * (x * 0.8 + 0.1)}" y="${svgSize * (y * 0.8 + 0.1)}" font-size="${svgSize * 0.8 * size}" dominant-baseline="middle" text-anchor="middle" font-family="monospace" fill="black">${text}</text>`);
-            }
-        }
-        return rawOutput ? { circles: circles.join(''), texts: texts.join('') } : `<svg xmlns="http://www.w3.org/2000/svg" width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}">${circles.join('')}${texts.join('')}</svg>`;
-    }
-
     let points = grid(rawPoints, gridSize * SCALE_FACTOR), basePoints = grid(rawPoints, gridSize);
 
     for (let i = 0; i < ITERATIONS_COUNT; i++) {
         basePoints = overlap(kMeans(points, basePoints))
     }
 
-    return makeSvg(basePoints);
+    return basePoints.map(({ x, y, count }) => ({ x, y, count, r: Math.sqrt(count / rawPoints.length) / gridSize }));
 }
 
 if (typeof window !== "undefined") {
