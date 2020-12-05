@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>cluster-plot demo</title>
+    <style>
+        img {
+            margin: 50px;
+            width: 400px;
+            height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script src="../lib.js"></script>
+    <script>
+        async function readImage(src) {
+            return await new Promise(res => {
+                const img = new Image();
+                img.src = src;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    res(ctx.getImageData(0, 0, img.width, img.height));
+                }
+            });
+        }
+
+        function getPoints(image) {
+            const { data, width, height } = image, points = [];
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i] > 127) {
+                    const xy = i / 4, x = (xy % width) / (width - 1), y = Math.floor(xy / width) / (height - 1);
+                    points.push([x, y]);
+                }
+            }
+            return points;
+        }
+
+        async function showExample(src) {
+            const image = await readImage(src), points = getPoints(image);
+            return `<div><img src="${src}"></img>${clusterPlot(points)}</div>`;
+        }
+
+        async function main() {
+            const srcs = ['1.png', '2.png'], examples = await Promise.all(srcs.map(showExample));
+            document.querySelector('#root').innerHTML = examples.join('');
+        }
+
+        main().catch(console.error);
+    </script>
+</body>
+
+</html>
