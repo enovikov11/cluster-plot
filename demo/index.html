@@ -5,6 +5,11 @@
     <meta charset="utf-8" />
     <title>cluster-plot demo</title>
     <style>
+        body {
+            background-color: gray;
+        }
+
+
         img {
             margin: 50px;
             width: 400px;
@@ -26,7 +31,7 @@
                     canvas.width = img.width;
                     canvas.height = img.height;
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
+                    ctx.drawImage(img, 0.5, 0.5);
                     res(ctx.getImageData(0, 0, img.width, img.height));
                 }
             });
@@ -45,12 +50,15 @@
 
         async function showExample(src) {
             const image = await readImage(src), points = getPoints(image);
-            return `<div><img src="${src}"></img>${clusterPlot(points)}</div>`;
+            return { html: `<div><img src="${src}"></img>${clusterPlot(points)}</div>`, points };
         }
 
         async function main() {
-            const srcs = ['1.png', '2.png'], examples = await Promise.all(srcs.map(showExample));
-            document.querySelector('#root').innerHTML = examples.join('');
+            const srcs = ['1.png', '2.png', '3.png', '4.png', '5.png'], examples = await Promise.all(srcs.map(showExample));
+            document.querySelector('#root').innerHTML = examples.map(({ html }) => html).join('');
+            window.points = examples.map(({ points }) => points);
+
+            // document.body.innerText = JSON.stringify(points);
         }
 
         main().catch(console.error);
